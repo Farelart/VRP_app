@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dataset Map</title>
+    <link rel="stylesheet" href="/static/style_generation.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+    <main>
+        <div id="googleMap"></div>
+
+        <div class="metadata">
+            <a href="/" class="a-home">
+                <p class="home"><i class='bx bxs-home'></i>Home</p>
+            </a>
+            <p class="model-variables-text"><i class='bx bx-cog' ></i>Model variables:</p>
+            <div class="model_variables">
+                <input type="text" id="depot" placeholder="Enter a depot">
+                <button id="btn-depot">Depot</button>
+                <input type="text" id="droneSpeed" placeholder="Drone's speed in m/s">
+                <button id="btn-droneSpeed">Speed</button>
+                <input type="text" id="droneBattery" placeholder="Drone's Flight time in min">
+                <button id="btn-droneBattery">Battery</button>
+                <input type="text" id="dronePayload" placeholder="Drone payload">
+                <button id="btn-dronePayload">Drone</button>
+                <input type="text" id="truckPayload" placeholder="Truck payload">
+                <button id="btn-truckPayload">Truck</button>
+                <select name="near" id="nearByPlacesTypes">
+                    <option value="" disabled selected>Nearby places type(s)</option>
+                    <option value="restaurant">restaurant</option>
+                    <option value="atm">atm</option>
+                    <option value="mosque">mosque</option>
+                    <option value="bank">bank</option>
+                    <option value="park">park</option>
+                    <option value="cemetery">cemetery</option>
+                    <option value="police">police</option>
+                    <option value="school">school</option>
+                    <option value="gas_station">gas_station</option>
+                    <option value="gym">gym</option>
+                    <option value="hospital">hospital</option>
+                    <option value="store">store</option>
+                    <option value="embassy">embassy</option>
+                    <option value="airport">airport</option>
+                </select>
+                <button id="btn-submitType">Type</button>
+            </div>
+            <button id="more">More</button>
+
+            <p class="download"><i class='bx bx-down-arrow-circle'></i>Download:</p>
+
+            <button id="btn-notebook">notebook</button>
+            <button id="dis">matrixes</button>
+            <button id="btn-downloadCSV">csv</button>
+
+            <a href="/simulation">
+                <div class="next">
+                    <button>Next<i class='bx bx-chevron-right'></i></button>
+                </div>
+            </a>
+        </div>
+    </main> 
+
+    <script defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgNya08tOrgXa_QoPQlWOP_sV_2YJzOyM&libraries=places&callback=initMap">
+    </script>
+    <script src="/static/app_generation.js"></script>
+</body>
+</html>

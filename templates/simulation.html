@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TDVRP App</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <script src="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone-min.js"></script>
+    <link href="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <main class="container">
+        <div id="map"></div>
+        
+        <nav class="nav">
+            <a href="/">
+                <h1><span class="logo">tdvrp</span>app</h1>
+            </a>
+            <!-- <h3>Model:</h3>
+            <h3>Obj. f(n)</h3> -->
+            <form action="" class="check">
+                <label for="routeTypeCheckbox">Map Routes</label>
+                <input type="checkbox" id="routeTypeCheckbox" name="routeTypeCheckbox">
+            </form>
+            <form action="" id="modelSelectionForm">
+                <span class="model_selection">Model selection:</span>
+                <select name="model" id="modelDropdown">
+                    <option value="CVRP">CVRP</option>
+                    <option value="TDVRP">TDVRP</option>
+                </select>
+            </form>
+        </nav>
+        
+        <section class="sidebar">
+            <i class='bx bx-chevron-right' id="side-right"></i>
+            <form action="/upload" class="dropzone" id="my-awesome-dropzone">
+            </form>
+        </section>
+
+        <section class="model-variables">
+            <i class='bx bx-chevron-left' id="arrow-left-model"></i>
+            <div>
+                <p class="p-variables"><i class='bx bxs-cog' ></i>Model variables</p>
+                
+            </div>
+
+            <form method="post" action="/solve" class="variables-form">
+                <input type="hidden" name="model" id="selectedModel" >
+                <div class="input-container">
+                    <i class='bx bx-navigation drone-icon'></i>
+                    <input type="text" placeholder="Nr. of Drones" name="nDrones" class="input">
+                </div>
+                <div class="input-container">
+                    <i class='bx bxs-truck truck-icon'></i>
+                    <input type="text" placeholder="Nr. of Trucks" name="nTrucks" class="input">
+                </div>
+                <div class="input-container">
+                    <i class='bx bx-navigation drone-icon'></i>
+                    <input type="text" placeholder="Drone's speed" name="drone_speed" class="input">
+                </div>
+                <div class="input-container">
+                    <i class='bx bxs-truck truck-icon'></i>
+                    <input type="text" placeholder="Truck's speed" name="truck_speed" class="input">
+                </div>
+                <div class="input-container">
+                    <i class='bx bx-navigation drone-icon'></i>
+                    <input type="text" placeholder="Drone's capacity" name="drone_capacity" class="input">
+                </div>
+                <div class="input-container">
+                    <i class='bx bxs-truck truck-icon'></i>
+                    <input type="text" placeholder="Truck's capacity" name="truck_capacity" class="input">
+                </div>
+                <div class="input-container">
+                    <i class='bx bx-navigation drone-icon'></i>
+                    <input type="text" placeholder="Drone's autonomy" name="drone_autonomy" class="input">
+                </div>
+                <button type="submit">Solve</button>
+            </form>
+        </section>
+
+        <section class="results">
+            <p class="p-results"><i class='bx bxs-info-circle'></i></i>Results</p>
+            <table class="results-summary">
+                <tr>
+                    <th>Objective:</th>
+                    <td class="objective"></td>
+                </tr>
+                <tr>
+                    <th>Solving time:</th>
+                    <td class="runTime"></td>
+                </tr>
+                <tr>
+                    <th>Trucks load:</th>
+                    <td class="truck_load"></td>
+                </tr>
+                <tr>
+                    <th>Drones load:</th>
+                    <td class="drone_load"></td>
+                </tr>
+            </table>
+            
+        </section>        
+    </main>
+    <script defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgNya08tOrgXa_QoPQlWOP_sV_2YJzOyM&libraries=places&callback=initMap">
+    </script>
+    <script>
+        document.getElementById('side-right').addEventListener('click', function() {
+            var sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('expanded');
+        });
+        document.getElementById('arrow-left-model').addEventListener('click', function() {
+            var model_variables = document.querySelector('.model-variables');
+            model_variables.classList.toggle('model_expanded');
+            var results = document.querySelector('.results');
+            results.classList.toggle('model_expanded');
+        });
+
+        let myDropzone = new Dropzone("#my-awesome-dropzone", {
+            paramName: 'file',
+            init: function() {
+                this.on("success", function(file, response) {
+                    fetchLocations();
+                });
+            }
+        });
+
+        // JavaScript to handle form submission and model selection
+        document.getElementById('modelDropdown').addEventListener('change', function() {
+            document.getElementById('selectedModel').value = this.value;
+        });
+
+        // Set the initial value for the hidden input
+        document.getElementById('selectedModel').value = document.getElementById('modelDropdown').value;
+    </script>
+    <script>
+        let map;
+        let locations = [];
+        let routesWithCoordinatesT = [];
+        let routesWithCoordinatesD = [];
+        
+
+        function initMap(locations = []) {
+            // Defining the geo coordinates of where the map will be located
+            let myLatLng = {
+                lat: 33.98015708073674, 
+                lng: -6.731845060569447
+            };
+
+            // Defining the map options
+            let mapOptions = {
+                center: myLatLng,
+                zoom: 16,
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                disableDefaultUI: true,
+                styles: [
+                    {
+                        "featureType": "all",
+                        "elementType": "labels.text",
+                        "stylers": [
+                            {
+                                "color": "#878787"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "all",
+                        "elementType": "labels.text.stroke",
+                        "stylers": [
+                            {
+                                "visibility": "off"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "landscape",
+                        "elementType": "all",
+                        "stylers": [
+                            {
+                                "color": "#f9f5ed"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "road.highway",
+                        "elementType": "all",
+                        "stylers": [
+                            {
+                                "color": "#f5f5f5"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "road.highway",
+                        "elementType": "geometry.stroke",
+                        "stylers": [
+                            {
+                                "color": "#c9c9c9"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "water",
+                        "elementType": "all",
+                        "stylers": [
+                            {
+                                "color": "#aee0f4"
+                            }
+                        ]
+                    }
+                ]
+            };
+
+            // creating the map
+            map = new google.maps.Map(document.getElementById("map"), mapOptions);
+            let bounds = new google.maps.LatLngBounds();
+            let depotLocation;
+
+            // Adding markers to the map
+            if (locations.length > 0) {
+                locations.forEach(function(location, index) {
+                    let markerOptions = {
+                        position: { lat: location.lat, lng: location.long },
+                        map: map,
+                        title: `Demand: ${location.demand}`
+                    };
+
+                    if (index === 0) {
+                        // Set special marker for the depot
+                        markerOptions.icon = '/static/img/icons8-epingle-de-carte-50.png'; // Update this path to your depot marker image
+                        markerOptions.animation = google.maps.Animation.BOUNCE;
+                    }
+
+                    let marker = new google.maps.Marker(markerOptions);
+
+                    bounds.extend(marker.getPosition());
+                });
+                map.fitBounds(bounds);
+            } else {
+                map.setCenter(myLatLng);
+                map.setZoom(16);
+            }
+            
+        }
+
+        async function fetchLocations() {
+            try {
+                const response = await fetch('/locations');
+                locations = await response.json();
+                console.log('Fetched locations:', locations);
+                initMap(locations);
+            } catch (error) {
+                console.error('Error fetching locations:', error);
+            }
+        }
+
+        document.querySelector("form[action='/solve']").addEventListener('submit', function(event) {
+            event.preventDefault();
+            const form = new FormData(this);
+            const model = document.getElementById('modelDropdown').value;
+            form.set('model', model);
+
+            fetch('/solve', {
+                method: 'POST',
+                body: form
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                routesWithCoordinatesT = data.routes_with_coordinates_T;
+                routesWithCoordinatesD = data.routes_with_coordinates_D;
+                travTime = data.travel_time;
+                runTime = data.running_time;
+                truck_load = data.truck_load;
+                drone_load = data.drone_load;
+                customers = data.n;
+                console.log('Routes with coordinates T:', routesWithCoordinatesT);
+                console.log('Routes with coordinates D:', routesWithCoordinatesD);
+                // Handle the routes_with_coordinates_T and routes_with_coordinates_D to update the map
+                const useCalcRoute = document.getElementById('routeTypeCheckbox').checked;
+                if (useCalcRoute) {
+                    calcRoute(map, routesWithCoordinatesT);
+                } else {
+                    lineRouteT(map, routesWithCoordinatesT);
+                }
+                lineRoute(map, routesWithCoordinatesD);
+                let objective = document.querySelector('.objective');
+                let solving_time = document.querySelector('.runTime');
+                let load_truck = document.querySelector('.truck_load');
+                let load_drone = document.querySelector('.drone_load');
+                if (objective) {
+                    objective.textContent = (travTime / 60).toFixed(2) + " min";
+                } else {
+                    console.error('Objective element not found');
+                }
+                if (solving_time) {
+                    solving_time.textContent = runTime.toFixed(2) + " s";
+                } else {
+                    console.error('solving_time element not found');
+                }
+                if (load_truck) {
+                    load_truck.textContent = truck_load + "|" + (customers -1);
+                } else {
+                    console.error('load_truck element not found');
+                }
+                if (load_drone) {
+                    load_drone.textContent = drone_load + "|" + (customers-1);
+                } else {
+                    console.error('load_drone element not found');
+                }
+            })
+            .catch(error => console.log('Error:', error));
+        });
+
+        function calcRoute(map, allCoordinates = []) {
+            let directionsService = new google.maps.DirectionsService();
+            allCoordinates.forEach((coordinates, index) => {
+                let routeColor = getRandomColor(); // Get a random color for each route
+                for (let i = 0; i < coordinates.length - 1; i++) {
+                    let request = {
+                        origin: coordinates[i],
+                        destination: coordinates[i + 1],
+                        travelMode: 'DRIVING'
+                    };
+
+                    directionsService.route(request, function(result, status) {
+                        if (status == "OK") {
+                            let directionsRenderer = new google.maps.DirectionsRenderer({
+                                suppressMarkers: true,
+                                polylineOptions: {
+                                    strokeColor: routeColor,
+                                    strokeOpacity: 1,
+                                    strokeWeight: 5
+                                }
+                            });
+                            directionsRenderer.setMap(map);
+                            directionsRenderer.setDirections(result);
+                        } else {
+                            console.error("Directions request failed due to " + status);
+                        }
+                    });
+                }
+            });
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function lineRoute(map, allFlightPlanCoordinates = []) {
+            allFlightPlanCoordinates.forEach((flightPlanCoordinates) => {
+                let routeColor = getRandomColor();
+                const flightPath = new google.maps.Polyline({
+                    path: flightPlanCoordinates,
+                    geodesic: true,
+                    strokeColor: "black",
+                    strokeOpacity: 1.0,
+                    strokeWeight: 3,
+                });
+
+                flightPath.setMap(map);
+            });
+        }
+
+        function lineRouteT(map, allFlightPlanCoordinates = []) {
+            allFlightPlanCoordinates.forEach((flightPlanCoordinates) => {
+                let routeColor = getRandomColor();
+                const flightPath = new google.maps.Polyline({
+                    path: flightPlanCoordinates,
+                    geodesic: true,
+                    strokeColor: "#1E90FF",
+                    strokeOpacity: 1.0,
+                    strokeWeight: 3,
+                });
+
+                flightPath.setMap(map);
+            });
+        }
+        
+        // Fetch locations from the backend when the page loads
+        window.onload = fetchLocations;
+    </script>
+</body>
+</html>

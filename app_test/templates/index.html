@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TDVRP App</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <script src="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone-min.js"></script>
+    <link href="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <main class="container">
+        <div id="map"></div>
+        
+        <nav class="nav">
+            <h1><span>tdvrp</span>app</h1>
+            <!-- <h3>Model:</h3>
+            <h3>Obj. f(n)</h3> -->
+        </nav>
+        
+        <section class="sidebar">
+            <i class='bx bx-chevron-right' id="side-right"></i>
+            <h3>dhbd</h3>
+            <form action="/upload" class="dropzone" id="my-awesome-dropzone" method="post" enctype="multipart/form-data">
+            </form>
+        </section>
+
+        <section class="model-variables">
+            Model variables
+        </section>
+
+        <section class="results">
+            Results
+        </section>        
+    </main>
+    <script defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgNya08tOrgXa_QoPQlWOP_sV_2YJzOyM&libraries=places&callback=initMap">
+    </script>
+    <script>
+        document.getElementById('side-right').addEventListener('click', function() {
+            var sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('expanded');
+        });
+
+        let myDropzone = new Dropzone("#my-awesome-dropzone", {
+            paramName: 'file',
+            init: function() {
+                this.on("success", function(file, response) {
+                    fetchLocations();
+                });
+            }
+        });
+    </script>
+    <script>
+        function initMap(locations = []) {
+            // Defining the geo coordinates of where the map will be located
+            let myLatLng = {
+                lat: 33.98015708073674, 
+                lng: -6.731845060569447
+            };
+
+            // Defining the map options
+            let mapOptions = {
+                center: myLatLng,
+                zoom: 16,
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                disableDefaultUI: true,
+            };
+
+            // creating the map
+            let map = new google.maps.Map(document.getElementById("map"), mapOptions);
+            let bounds = new google.maps.LatLngBounds();
+            let depotLocation;
+
+            // Adding markers to the map
+            if (locations.length > 0) {
+                locations.forEach(function(location, index) {
+                    let markerOptions = {
+                        position: { lat: location.lat, lng: location.long },
+                        map: map,
+                        title: `Demand: ${location.demand}`
+                    };
+
+                    if (index === 0) {
+                        // Set special marker for the depot
+                        markerOptions.icon = '/static/img/icons8-epingle-de-carte-50.png'; // Update this path to your depot marker image
+                        markerOptions.animation = google.maps.Animation.BOUNCE;
+                    }
+
+                    let marker = new google.maps.Marker(markerOptions);
+
+                    bounds.extend(marker.getPosition());
+                });
+                map.fitBounds(bounds);
+            } else {
+                map.setCenter(myLatLng);
+                map.setZoom(16);
+            }
+        }
+
+        async function fetchLocations() {
+            try {
+                const response = await fetch('/locations');
+                const locations = await response.json();
+                console.log('Fetched locations:', locations);
+                initMap(locations);
+            } catch (error) {
+                console.error('Error fetching locations:', error);
+            }
+        }
+
+        // Fetch locations from the backend when the page loads
+        window.onload = fetchLocations;
+    </script>
+</body>
+</html>

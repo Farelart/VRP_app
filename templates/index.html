@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tdvrpapp</title>
+    <link rel="stylesheet" href="/static/index_style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+    <section class="nav-bar">
+        <nav>
+            <h1><i class='bx bxs-truck'></i><span>tdvrp</span>app</h1>
+            <article class="nav-items">
+                <a href="/generation" class="nav-a">Generation</a>
+                <a href="/simulation" class="nav-a">Simulation</a>
+                <a href="/simulation" class="nav-a">Get started</a>
+            </article>
+        </nav>
+    </section>
+    <section class="main-content">
+        <section class="text">
+            <h2>Optimize your <span class="dat">drones and trucks</span> delivery <span class="effi">efficiently</span></h2>
+            <p>Utilize advanced algorithms to generate and simulate Vehicle Routing Problems (VRP) for trucks and drones, visualizing routes and optimizing delivery efficiency on interactive maps. This research project aims to provide innovative solutions for complex logistics challenges, enhancing the understanding and application of TDVRP in modern transportation systems.</p>
+            <a href="/generation" class="get-started">Get started</a>
+            <a href="" class="watch-demo">Watch demo<i class='bx bx-play-circle' ></i></a>
+        </section>
+        <section class="image">
+            <img src="/static/img/file.png" alt="">
+        </section>
+    </section>
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <video src="/static/video/finaltdvrpapp.mp4" width="560" height="315" controls autoplay muted loop>
+                <!-- <source src="/static/video/vid1.mp4" type="video/mp4"> -->
+                
+            </video>
+        </div>
+    </div>
+
+    <script>
+        // Get the modal
+        var modal = document.getElementById("myModal");
+
+        // Get the link that opens the modal
+        var btn = document.querySelector(".watch-demo");
+
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
+
+        // When the user clicks on the button, open the modal
+        btn.onclick = function(event) {
+            event.preventDefault();
+            modal.style.display = "block";
+        }
+
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
