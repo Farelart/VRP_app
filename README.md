@@ -3,9 +3,9 @@ The purpose of this app is to generate relevant data and simulate the resolution
 
 ## To start the app
 
-pip install requirements.txt
+<code>pip install requirements.txt</code>
 <br>
-python main.py
+<code>python main.py</code>
 
 
 
